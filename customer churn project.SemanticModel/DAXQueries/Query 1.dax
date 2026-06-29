@@ -1,0 +1,715 @@
+
+// ================================================================
+// CONNECTTEL CHURN DASHBOARD — CREATE ALL MEASURES IN _Measures TABLE
+// Run this in DAX Query View (Power BI Desktop)
+// ================================================================
+
+// First, create the measures table if it doesn't exist
+// (Do this manually first: Modeling > New Table > _Measures = {""})
+// Then paste and run each DEFINE block below, or use the full script.
+
+DEFINE
+
+    // ----------------------------------------------------------------
+    // CORE CUSTOMER METRICS
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Total Customers] =
+        COUNTROWS(Telco_Churn)
+
+    MEASURE _Measures[Churned Customers] =
+        CALCULATE(
+            COUNTROWS(Telco_Churn),
+            Telco_Churn[Churn] = "Yes"
+        )
+
+    MEASURE _Measures[Retained Customers] =
+        CALCULATE(
+            COUNTROWS(Telco_Churn),
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Filtered Active Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Churn] = "No")
+
+    // ----------------------------------------------------------------
+    // RATES
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Churn Rate] =
+        DIVIDE(
+            [Churned Customers],
+            [Total Customers],
+            0
+        )
+
+    MEASURE _Measures[Retention Rate] =
+        DIVIDE([Retained Customers], [Total Customers], 0)
+
+    // ----------------------------------------------------------------
+    // REVENUE METRICS
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Total Monthly Revenue] =
+        SUM(Telco_Churn[MonthlyCharges])
+
+    MEASURE _Measures[Monthly Revenue Lost] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Churn] = "Yes"
+        )
+
+    MEASURE _Measures[Monthly Revenue Retained] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Monthly Charge (Churned)] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Churn] = "Yes"
+        )
+
+    MEASURE _Measures[Avg Monthly Charge (Retained)] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Revenue Lost %] =
+        DIVIDE([Monthly Revenue Lost], [Total Monthly Revenue], 0)
+
+    MEASURE _Measures[Revenue At Risk] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Churn] = "No",
+            Telco_Churn[Contract] = "Month-to-month",
+            OR(
+                Telco_Churn[InternetService] = "Fiber optic",
+                Telco_Churn[PaymentMethod] = "Electronic check"
+            )
+        )
+
+    // ----------------------------------------------------------------
+    // PERIOD COMPARISON HELPERS
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Comparison Label] =
+        VAR _period =
+            SELECTEDVALUE('Time Period Table'[Time Period])
+        RETURN
+        SWITCH(
+            _period,
+            "PM",  "vs Previous Month",
+            "3M",  "vs Previous 3 Months",
+            "6M",  "vs Previous 6 Months",
+            "12M", "vs Previous 12 Months",
+            "YTD", "vs Previous YTD"
+        )
+
+    MEASURE _Measures[Customers Start of Period] =
+        VAR _maxDate =
+            CALCULATE(MAX('Date'[Date]), REMOVEFILTERS('Date'))
+        RETURN
+        SWITCH(
+            SELECTEDVALUE('Time Period Table'[Time Period]),
+            "PM",  CALCULATE([Total Customers], PREVIOUSMONTH('Date'[Date])),
+            "3M",  CALCULATE([Total Customers], DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)),
+            "6M",  CALCULATE([Total Customers], DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)),
+            "12M", CALCULATE([Total Customers], DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)),
+            "YTD", CALCULATE([Total Customers], SAMEPERIODLASTYEAR(DATESYTD('Date'[Date])))
+        )
+
+    // ----------------------------------------------------------------
+    // TOTAL CUSTOMERS — PERIOD COMPARISON
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Total Customers Previous] =
+        VAR _period =
+            SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR _maxDate =
+            CALCULATE(
+                MAX('Date'[Date]),
+                REMOVEFILTERS('Date')
+            )
+        RETURN
+        SWITCH(
+            _period,
+            "PM",
+                CALCULATE(
+                    [Total Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESBETWEEN(
+                        'Date'[Date],
+                        EOMONTH(_maxDate, -2) + 1,
+                        EOMONTH(_maxDate, -1)
+                    )
+                ),
+            "3M",
+                CALCULATE(
+                    [Total Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+                ),
+            "6M",
+                CALCULATE(
+                    [Total Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+                ),
+            "12M",
+                CALCULATE(
+                    [Total Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+                ),
+            "YTD",
+                CALCULATE(
+                    [Total Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+                )
+        )
+
+    MEASURE _Measures[Total Customers Var] =
+        [Total Customers] - [Total Customers Previous]
+
+    MEASURE _Measures[Total Customers % Change] =
+        DIVIDE(
+            [Total Customers] - [Total Customers Previous],
+            [Total Customers Previous]
+        )
+
+    MEASURE _Measures[Total Customers Change Text] =
+        VAR pct        = [Total Customers % Change]
+        VAR diff       = [Total Customers Var]
+        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR periodText =
+            SWITCH(
+                period,
+                "PM",  "vs Last Month",
+                "3M",  "vs Last 3 Months",
+                "6M",  "vs Last 6 Months",
+                "12M", "vs Last 12 Months",
+                "YTD", "vs Previous YTD"
+            )
+        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+        RETURN
+        pctText & " (" & diffText & ") " & periodText
+
+    MEASURE _Measures[Total Customers Color] =
+        SWITCH(
+            TRUE(),
+            [Total Customers % Change] > 0, "Green",
+            [Total Customers % Change] < 0, "Red",
+            "#808080"
+        )
+
+    // ----------------------------------------------------------------
+    // CHURNED CUSTOMERS — PERIOD COMPARISON
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Churned Customers Previous] =
+        VAR _period =
+            SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR _maxDate =
+            CALCULATE(
+                MAX('Date'[Date]),
+                REMOVEFILTERS('Date')
+            )
+        RETURN
+        SWITCH(
+            _period,
+            "PM",
+                CALCULATE(
+                    [Churned Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESBETWEEN(
+                        'Date'[Date],
+                        EOMONTH(_maxDate, -2) + 1,
+                        EOMONTH(_maxDate, -1)
+                    )
+                ),
+            "3M",
+                CALCULATE(
+                    [Churned Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+                ),
+            "6M",
+                CALCULATE(
+                    [Churned Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+                ),
+            "12M",
+                CALCULATE(
+                    [Churned Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+                ),
+            "YTD",
+                CALCULATE(
+                    [Churned Customers],
+                    REMOVEFILTERS('Time Period Table'),
+                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+                )
+        )
+
+    MEASURE _Measures[Churned Customers Var] =
+        [Churned Customers] - [Churned Customers Previous]
+
+    MEASURE _Measures[Churned Customers % Change] =
+        DIVIDE(
+            [Churned Customers] - [Churned Customers Previous],
+            [Churned Customers Previous]
+        )
+
+    MEASURE _Measures[Churned Customers Change Text] =
+        VAR pct        = [Churned Customers % Change]
+        VAR diff       = [Churned Customers Var]
+        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR periodText =
+            SWITCH(
+                period,
+                "PM",  "vs Last Month",
+                "3M",  "vs Last 3 Months",
+                "6M",  "vs Last 6 Months",
+                "12M", "vs Last 12 Months",
+                "YTD", "vs Previous YTD"
+            )
+        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+        RETURN
+        pctText & " (" & diffText & ") " & periodText
+
+    MEASURE _Measures[Churned Customers Color] =
+        SWITCH(
+            TRUE(),
+            [Churned Customers % Change] > 0, "Red",
+            [Churned Customers % Change] < 0, "Green",
+            "#808080"
+        )
+
+    // ----------------------------------------------------------------
+    // CHURN RATE — PERIOD COMPARISON
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Churn Rate Previous] =
+        VAR _period =
+            SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR _maxDate =
+            CALCULATE(
+                MAX('Date'[Date]),
+                REMOVEFILTERS('Date')
+            )
+        RETURN
+        SWITCH(
+            _period,
+            "PM",
+                CALCULATE(
+                    [Churn Rate],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESBETWEEN(
+                        'Date'[Date],
+                        EOMONTH(_maxDate, -3) + 1,
+                        EOMONTH(_maxDate, -2)
+                    )
+                ),
+            "3M",
+                CALCULATE(
+                    [Churn Rate],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+                ),
+            "6M",
+                CALCULATE(
+                    [Churn Rate],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+                ),
+            "12M",
+                CALCULATE(
+                    [Churn Rate],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+                ),
+            "YTD",
+                CALCULATE(
+                    [Churn Rate],
+                    REMOVEFILTERS('Time Period Table'),
+                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+                )
+        )
+
+    MEASURE _Measures[Churn Rate Var] =
+        [Churn Rate] - [Churn Rate Previous]
+
+    MEASURE _Measures[Churn Rate % Change] =
+        DIVIDE(
+            [Churn Rate] - [Churn Rate Previous],
+            [Churn Rate Previous]
+        )
+
+    MEASURE _Measures[Churn Rate Change Text] =
+        VAR pp         = [Churn Rate Var]
+        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR periodText =
+            SWITCH(
+                period,
+                "PM",  "vs Last Month",
+                "3M",  "vs Last 3 Months",
+                "6M",  "vs Last 6 Months",
+                "12M", "vs Last 12 Months",
+                "YTD", "vs Previous YTD"
+            )
+        RETURN
+        FORMAT(pp, "+0.0;-0.0") & " pp " & periodText
+
+    MEASURE _Measures[Churn Rate Color] =
+        SWITCH(
+            TRUE(),
+            [Churn Rate % Change] > 0, "Red",
+            [Churn Rate % Change] < 0, "Green",
+            "#808080"
+        )
+
+    // ----------------------------------------------------------------
+    // MONTHLY REVENUE LOST — PERIOD COMPARISON
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Monthly Revenue Lost Previous] =
+        VAR _period =
+            SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR _maxDate =
+            CALCULATE(
+                MAX('Date'[Date]),
+                REMOVEFILTERS('Date')
+            )
+        RETURN
+        SWITCH(
+            _period,
+            "PM",
+                CALCULATE(
+                    [Monthly Revenue Lost],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESBETWEEN(
+                        'Date'[Date],
+                        EOMONTH(_maxDate, -2) + 1,
+                        EOMONTH(_maxDate, -1)
+                    )
+                ),
+            "3M",
+                CALCULATE(
+                    [Monthly Revenue Lost],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+                ),
+            "6M",
+                CALCULATE(
+                    [Monthly Revenue Lost],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+                ),
+            "12M",
+                CALCULATE(
+                    [Monthly Revenue Lost],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+                ),
+            "YTD",
+                CALCULATE(
+                    [Monthly Revenue Lost],
+                    REMOVEFILTERS('Time Period Table'),
+                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+                )
+        )
+
+    MEASURE _Measures[Monthly Revenue Lost Var] =
+        [Monthly Revenue Lost] - [Monthly Revenue Lost Previous]
+
+    MEASURE _Measures[Monthly Revenue Lost % Change] =
+        DIVIDE(
+            [Monthly Revenue Lost] - [Monthly Revenue Lost Previous],
+            [Monthly Revenue Lost Previous]
+        )
+
+    MEASURE _Measures[Monthly Revenue Lost Change Text] =
+        VAR pct        = [Monthly Revenue Lost % Change]
+        VAR diff       = [Monthly Revenue Lost Var]
+        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR periodText =
+            SWITCH(
+                period,
+                "PM",  "vs Last Month",
+                "3M",  "vs Last 3 Months",
+                "6M",  "vs Last 6 Months",
+                "12M", "vs Last 12 Months",
+                "YTD", "vs Previous YTD"
+            )
+        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+        RETURN
+        pctText & " (" & diffText & ") " & periodText
+
+    MEASURE _Measures[Monthly Revenue Lost Color] =
+        SWITCH(
+            TRUE(),
+            [Monthly Revenue Lost % Change] > 0, "Red",
+            [Monthly Revenue Lost % Change] < 0, "Green",
+            "#808080"
+        )
+
+    // ----------------------------------------------------------------
+    // AVG MONTHLY CHARGE (CHURNED) — PERIOD COMPARISON
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Avg Monthly Charge (Churned) Previous] =
+        VAR _period =
+            SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR _maxDate =
+            CALCULATE(
+                MAX('Date'[Date]),
+                REMOVEFILTERS('Date')
+            )
+        RETURN
+        SWITCH(
+            _period,
+            "PM",
+                CALCULATE(
+                    [Avg Monthly Charge (Churned)],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESBETWEEN(
+                        'Date'[Date],
+                        EOMONTH(_maxDate, -2) + 1,
+                        EOMONTH(_maxDate, -1)
+                    )
+                ),
+            "3M",
+                CALCULATE(
+                    [Avg Monthly Charge (Churned)],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+                ),
+            "6M",
+                CALCULATE(
+                    [Avg Monthly Charge (Churned)],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+                ),
+            "12M",
+                CALCULATE(
+                    [Avg Monthly Charge (Churned)],
+                    REMOVEFILTERS('Time Period Table'),
+                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+                ),
+            "YTD",
+                CALCULATE(
+                    [Avg Monthly Charge (Churned)],
+                    REMOVEFILTERS('Time Period Table'),
+                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+                )
+        )
+
+    MEASURE _Measures[Avg Monthly Charge (Churned) Var] =
+        [Avg Monthly Charge (Churned)] - [Avg Monthly Charge (Churned) Previous]
+
+    MEASURE _Measures[Avg Monthly Charge (Churned) % Change] =
+        DIVIDE(
+            [Avg Monthly Charge (Churned)] - [Avg Monthly Charge (Churned) Previous],
+            [Avg Monthly Charge (Churned) Previous]
+        )
+
+    MEASURE _Measures[Avg Monthly Charge (Churned) Change Text] =
+        VAR pct        = [Avg Monthly Charge (Churned) % Change]
+        VAR diff       = [Avg Monthly Charge (Churned) Var]
+        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+        VAR periodText =
+            SWITCH(
+                period,
+                "PM",  "vs Last Month",
+                "3M",  "vs Last 3 Months",
+                "6M",  "vs Last 6 Months",
+                "12M", "vs Last 12 Months",
+                "YTD", "vs Previous YTD"
+            )
+        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+        RETURN
+        pctText & " (" & diffText & ") " & periodText
+
+    MEASURE _Measures[Avg Monthly Charge (Churned) Color] =
+        SWITCH(
+            TRUE(),
+            [Avg Monthly Charge (Churned) % Change] > 0, "Red",
+            [Avg Monthly Charge (Churned) % Change] < 0, "Green",
+            "#808080"
+        )
+
+    // ----------------------------------------------------------------
+    // RISK TIER — COUNTS & REVENUE
+    // ----------------------------------------------------------------
+
+    MEASURE _Measures[Critical Active Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical", Telco_Churn[Churn] = "No")
+
+    MEASURE _Measures[Critical Total Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical")
+
+    MEASURE _Measures[Critical Risk Revenue] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "Critical",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Charge Critical] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "Critical",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Tenure Critical] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[tenure]),
+            Telco_Churn[Risk Label] = "Critical"
+        )
+
+    MEASURE _Measures[Fiber % Critical] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical", Telco_Churn[InternetService] = "Fiber optic"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical"),
+            0
+        )
+
+    MEASURE _Measures[ECheck % Critical] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical", Telco_Churn[PaymentMethod] = "Electronic check"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical"),
+            0
+        )
+
+    MEASURE _Measures[High Active Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High", Telco_Churn[Churn] = "No")
+
+    MEASURE _Measures[High Total Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High")
+
+    MEASURE _Measures[High Risk Revenue] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "High",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Charge High] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "High",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Tenure High] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[tenure]),
+            Telco_Churn[Risk Label] = "High"
+        )
+
+    MEASURE _Measures[Fiber % High] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High", Telco_Churn[InternetService] = "Fiber optic"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High"),
+            0
+        )
+
+    MEASURE _Measures[ECheck % High] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High", Telco_Churn[PaymentMethod] = "Electronic check"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High"),
+            0
+        )
+
+    MEASURE _Measures[Medium Active Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium", Telco_Churn[Churn] = "No")
+
+    MEASURE _Measures[Medium Total Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium")
+
+    MEASURE _Measures[Medium Risk Revenue] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "Medium",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Charge Medium] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "Medium",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Tenure Medium] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[tenure]),
+            Telco_Churn[Risk Label] = "Medium"
+        )
+
+    MEASURE _Measures[Fiber % Medium] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium", Telco_Churn[InternetService] = "Fiber optic"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium"),
+            0
+        )
+
+    MEASURE _Measures[ECheck % Medium] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium", Telco_Churn[PaymentMethod] = "Electronic check"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium"),
+            0
+        )
+
+    MEASURE _Measures[Low Active Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low", Telco_Churn[Churn] = "No")
+
+    MEASURE _Measures[Low Total Count] =
+        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low")
+
+    MEASURE _Measures[Low Risk Revenue] =
+        CALCULATE(
+            SUM(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "Low",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Charge Low] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[MonthlyCharges]),
+            Telco_Churn[Risk Label] = "Low",
+            Telco_Churn[Churn] = "No"
+        )
+
+    MEASURE _Measures[Avg Tenure Low] =
+        CALCULATE(
+            AVERAGE(Telco_Churn[tenure]),
+            Telco_Churn[Risk Label] = "Low"
+        )
+
+    MEASURE _Measures[Fiber % Low] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low", Telco_Churn[InternetService] = "Fiber optic"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low"),
+            0
+        )
+
+    MEASURE _Measures[ECheck % Low] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low", Telco_Churn[PaymentMethod] = "Electronic check"),
+            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low"),
+            0
+        )
+
+EVALUATE { 1 }

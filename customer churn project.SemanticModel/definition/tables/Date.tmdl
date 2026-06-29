@@ -1,0 +1,55 @@
+table Date
+	lineageTag: 70fe824b-a69c-4ddf-b272-27ab44071074
+
+	column Date
+		formatString: General Date
+		lineageTag: 76c2d876-7cea-42a2-9f94-138afd9d9883
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		variation Variation
+			isDefault
+			relationship: f207af6a-fb1f-45b0-aabd-4c6c8d5ad305
+			defaultHierarchy: LocalDateTable_51496c7c-124f-4ade-87e1-fe19153f1bbb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter = 'Date'[Date].[Year]& " " & 'Date'[Date].[Quarter]
+		lineageTag: 13f0f86d-e43f-4fb0-b7f9-39ea177dd1f6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column month = 'Date'[Date].[Month]
+		lineageTag: 078680b6-7d16-493f-a71b-a1eba9120279
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day = FORMAT('Date'[Date],"ddd")
+		lineageTag: e72a734b-7043-4003-a657-c31706af323f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weekday = IF('Date'[Day] = "Fri" || 'Date'[Day]="Sat",FALSE(),TRUE())
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 11a70493-25c0-4b29-aa38-05120ab7cb7a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year = 'Date'[Date].[Year]
+		formatString: 0
+		lineageTag: aefc5f1e-cd94-4406-ba2b-fa9a5ebb48a3
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Date = calculated
+		mode: import
+		source = CALENDAR(MIN(Telco_Churn[SignupDate]),MAX(Telco_Churn[SignupDate]))
+
+	annotation PBI_Id = b8e5ba99e85045899b8ebdfd6b8b4c23
+

@@ -1,0 +1,27 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["Telco_Churn","_Measures"]
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop","DevMode"]
+
+ref table Telco_Churn
+ref table DateTableTemplate_bea44cd2-01bf-4856-bfaa-c5b729d28820
+ref table LocalDateTable_f0de5e58-3d80-4a23-a21f-019a61b8fb81
+ref table Date
+ref table LocalDateTable_51496c7c-124f-4ade-87e1-fe19153f1bbb
+ref table 'Time Period Table'
+ref table _Measures
+ref table Dim_Parameter
+ref table Dim_Parameter2
+ref table kpi
+
+ref cultureInfo en-US
+

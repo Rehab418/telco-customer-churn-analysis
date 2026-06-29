@@ -1,0 +1,1641 @@
+table _Measures
+	lineageTag: e8630ce4-b831-499b-815c-e92b97d18fe1
+
+	measure 'Total Customers' = ```
+			
+			        COUNTROWS(Telco_Churn)
+			```
+		lineageTag: c6f6f337-cbe9-4e87-bcd3-991ff3037651
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Churned Customers' = ```
+			
+			        CALCULATE(
+			            COUNTROWS(Telco_Churn),
+			            Telco_Churn[Churn] = "Yes"
+			        )
+			```
+		formatString: 0
+		lineageTag: 81d2db63-959c-4039-9856-26780b1be399
+
+	measure 'Retained Customers' = ```
+			
+			        CALCULATE(
+			            COUNTROWS(Telco_Churn),
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		formatString: 0
+		lineageTag: 52e10b56-4a20-4d72-a8f1-35ba17fd0109
+
+	measure 'Filtered Active Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Churn] = "No")
+			```
+		formatString: 0
+		lineageTag: 1e3faa2a-9068-4f46-897e-3f5dd49c584c
+
+	measure 'Churn Rate' = ```
+			
+			        DIVIDE(
+			            [Churned Customers],
+			            [Total Customers],
+			            0
+			        )
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 2a7334f6-1f1c-4095-a41c-4fc1e6ccd88f
+
+	measure 'Retention Rate' = ```
+			
+			        DIVIDE([Retained Customers], [Total Customers], 0)
+			```
+		lineageTag: 0d5aa067-2065-4152-957c-c6211ea9c34f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Monthly Revenue' = ```
+			
+			        SUM(Telco_Churn[MonthlyCharges])
+			```
+		lineageTag: 14e7095b-94b6-4086-b896-50078c61a179
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly Revenue Lost' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Churn] = "Yes"
+			        )
+			```
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: b8be07cd-3b3e-43c9-b93a-5cb60b1040f4
+
+	measure 'Monthly Revenue Retained' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 31d63826-0fe6-447f-a3a3-b0b3a91e03ef
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Monthly Charge (Churned)' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Churn] = "Yes"
+			        )
+			```
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: b1988afd-b3d7-4d41-8b46-742f1a359cee
+
+	measure 'Avg Monthly Charge (Retained)' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 5f70db02-3750-499a-962e-4578842c184e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Revenue Lost %' = ```
+			
+			        DIVIDE([Monthly Revenue Lost], [Total Monthly Revenue], 0)
+			```
+		lineageTag: b0c469e7-43fe-4627-9fb9-e20bbe8fd676
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Revenue At Risk' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Churn] = "No",
+			            Telco_Churn[Contract] = "Month-to-month",
+			            OR(
+			                Telco_Churn[InternetService] = "Fiber optic",
+			                Telco_Churn[PaymentMethod] = "Electronic check"
+			            )
+			        )
+			```
+		lineageTag: de65880f-bc52-41a2-9eab-64b0b954c870
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Comparison Label' = ```
+			
+			        VAR _period =
+			            SELECTEDVALUE('Time Period Table'[Time Period])
+			        RETURN
+			        SWITCH(
+			            _period,
+			            "PM",  "vs Previous Month",
+			            "3M",  "vs Previous 3 Months",
+			            "6M",  "vs Previous 6 Months",
+			            "12M", "vs Previous 12 Months",
+			            "YTD", "vs Previous YTD"
+			        )
+			```
+		lineageTag: 26ed2de2-c287-4332-adc6-410ec1557bb2
+
+	measure 'Customers Start of Period' = ```
+			
+			        VAR _maxDate =
+			            CALCULATE(MAX('Date'[Date]), REMOVEFILTERS('Date'))
+			        RETURN
+			        SWITCH(
+			            SELECTEDVALUE('Time Period Table'[Time Period]),
+			            "PM",  CALCULATE([Total Customers], PREVIOUSMONTH('Date'[Date])),
+			            "3M",  CALCULATE([Total Customers], DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)),
+			            "6M",  CALCULATE([Total Customers], DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)),
+			            "12M", CALCULATE([Total Customers], DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)),
+			            "YTD", CALCULATE([Total Customers], SAMEPERIODLASTYEAR(DATESYTD('Date'[Date])))
+			        )
+			```
+		formatString: 0
+		lineageTag: 298dfb9a-4c22-4236-a6e4-ae8c565e8253
+
+	measure 'Total Customers Previous' = ```
+			
+			        VAR _period =
+			            SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR _maxDate =
+			            CALCULATE(
+			                MAX('Date'[Date]),
+			                REMOVEFILTERS('Date')
+			            )
+			        RETURN
+			        SWITCH(
+			            _period,
+			            "PM",
+			                CALCULATE(
+			                    [Total Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESBETWEEN(
+			                        'Date'[Date],
+			                        EOMONTH(_maxDate, -2) + 1,
+			                        EOMONTH(_maxDate, -1)
+			                    )
+			                ),
+			            "3M",
+			                CALCULATE(
+			                    [Total Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+			                ),
+			            "6M",
+			                CALCULATE(
+			                    [Total Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+			                ),
+			            "12M",
+			                CALCULATE(
+			                    [Total Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+			                ),
+			            "YTD",
+			                CALCULATE(
+			                    [Total Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+			                )
+			        )
+			```
+		formatString: 0
+		lineageTag: 78128796-d1e4-4be4-b11d-ad7be6595e8f
+
+	measure 'Total Customers Var' = ```
+			
+			        [Total Customers] - [Total Customers Previous]
+			```
+		formatString: 0
+		lineageTag: 2bb72f63-2ae9-4322-95a9-74f8d14b7f8b
+
+	measure 'Total Customers % Change' = ```
+			
+			        DIVIDE(
+			            [Total Customers] - [Total Customers Previous],
+			            [Total Customers Previous]
+			        )
+			```
+		lineageTag: 0aa096ef-cef0-4ee5-9b54-335ce91b6ed7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Customers Change Text' = ```
+			
+			        VAR pct        = [Total Customers % Change]
+			        VAR diff       = [Total Customers Var]
+			        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR periodText =
+			            SWITCH(
+			                period,
+			                "PM",  "vs Last Month",
+			                "3M",  "vs Last 3 Months",
+			                "6M",  "vs Last 6 Months",
+			                "12M", "vs Last 12 Months",
+			                "YTD", "vs Previous YTD"
+			            )
+			        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+			        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+			        RETURN
+			        pctText & " (" & diffText & ") " & periodText
+			```
+		lineageTag: d12429f9-16c1-4ddb-bb49-4a58d987b2fd
+
+	measure 'Total Customers Color' = ```
+			
+			        SWITCH(
+			            TRUE(),
+			            [Total Customers % Change] > 0, "Green",
+			            [Total Customers % Change] < 0, "Red",
+			            "#808080"
+			        )
+			```
+		lineageTag: 0dc82e08-d61f-4399-ac3d-daacb502ea4c
+
+	measure 'Churned Customers Previous' = ```
+			
+			        VAR _period =
+			            SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR _maxDate =
+			            CALCULATE(
+			                MAX('Date'[Date]),
+			                REMOVEFILTERS('Date')
+			            )
+			        RETURN
+			        SWITCH(
+			            _period,
+			            "PM",
+			                CALCULATE(
+			                    [Churned Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESBETWEEN(
+			                        'Date'[Date],
+			                        EOMONTH(_maxDate, -2) + 1,
+			                        EOMONTH(_maxDate, -1)
+			                    )
+			                ),
+			            "3M",
+			                CALCULATE(
+			                    [Churned Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+			                ),
+			            "6M",
+			                CALCULATE(
+			                    [Churned Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+			                ),
+			            "12M",
+			                CALCULATE(
+			                    [Churned Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+			                ),
+			            "YTD",
+			                CALCULATE(
+			                    [Churned Customers],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+			                )
+			        )
+			```
+		formatString: 0
+		lineageTag: 92bbb608-596f-4340-bbdb-e573bc393ff0
+
+	measure 'Churned Customers Var' = ```
+			
+			        [Churned Customers] - [Churned Customers Previous]
+			```
+		formatString: 0
+		lineageTag: 28775845-8d74-4590-b88c-e5afba7b3df8
+
+	measure 'Churned Customers % Change' = ```
+			
+			        DIVIDE(
+			            [Churned Customers] - [Churned Customers Previous],
+			            [Churned Customers Previous]
+			        )
+			```
+		lineageTag: 03b60ae1-d885-4744-beca-409cedabd293
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Churned Customers Change Text' = ```
+			
+			        VAR pct        = [Churned Customers % Change]
+			        VAR diff       = [Churned Customers Var]
+			        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR periodText =
+			            SWITCH(
+			                period,
+			                "PM",  "vs Last Month",
+			                "3M",  "vs Last 3 Months",
+			                "6M",  "vs Last 6 Months",
+			                "12M", "vs Last 12 Months",
+			                "YTD", "vs Previous YTD"
+			            )
+			        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+			        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+			        RETURN
+			        pctText & " (" & diffText & ") " & periodText
+			```
+		lineageTag: e32d7746-522b-4b0b-9fe4-2a56e5de03f6
+
+	measure 'Churned Customers Color' = ```
+			
+			        SWITCH(
+			            TRUE(),
+			            [Churned Customers % Change] > 0, "Red",
+			            [Churned Customers % Change] < 0, "Green",
+			            "#808080"
+			        )
+			```
+		lineageTag: 379c6590-b38f-4839-ae60-888e365da27b
+
+	measure 'Churn Rate Previous' = ```
+			
+			        VAR _period =
+			            SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR _maxDate =
+			            CALCULATE(
+			                MAX('Date'[Date]),
+			                REMOVEFILTERS('Date')
+			            )
+			        RETURN
+			        SWITCH(
+			            _period,
+			            "PM",
+			                CALCULATE(
+			                    [Churn Rate],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESBETWEEN(
+			                        'Date'[Date],
+			                        EOMONTH(_maxDate, -3) + 1,
+			                        EOMONTH(_maxDate, -2)
+			                    )
+			                ),
+			            "3M",
+			                CALCULATE(
+			                    [Churn Rate],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+			                ),
+			            "6M",
+			                CALCULATE(
+			                    [Churn Rate],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+			                ),
+			            "12M",
+			                CALCULATE(
+			                    [Churn Rate],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+			                ),
+			            "YTD",
+			                CALCULATE(
+			                    [Churn Rate],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+			                )
+			        )
+			```
+		lineageTag: dd66a322-b510-4a00-9642-a0c52bb15781
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Churn Rate Var' = ```
+			
+			        [Churn Rate] - [Churn Rate Previous]
+			```
+		lineageTag: 4aff7280-0d20-498b-acc1-b4e5be3b21c4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Churn Rate % Change' = ```
+			
+			        DIVIDE(
+			            [Churn Rate] - [Churn Rate Previous],
+			            [Churn Rate Previous]
+			        )
+			```
+		lineageTag: 492ca36e-95f0-4706-8707-5a4920dbf33b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Churn Rate Change Text' = ```
+			
+			        VAR pp         = [Churn Rate Var]
+			        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR periodText =
+			            SWITCH(
+			                period,
+			                "PM",  "vs Last Month",
+			                "3M",  "vs Last 3 Months",
+			                "6M",  "vs Last 6 Months",
+			                "12M", "vs Last 12 Months",
+			                "YTD", "vs Previous YTD"
+			            )
+			        RETURN
+			        FORMAT(pp, "+0.0;-0.0") & " pp " & periodText
+			```
+		lineageTag: 26e6b4d7-84b3-4d76-a309-271bba092b76
+
+	measure 'Churn Rate Color' = ```
+			
+			        SWITCH(
+			            TRUE(),
+			            [Churn Rate % Change] > 0, "Red",
+			            [Churn Rate % Change] < 0, "Green",
+			            "#808080"
+			        )
+			```
+		lineageTag: 769654be-9c98-4f72-96c9-2985de2c8a62
+
+	measure 'Monthly Revenue Lost Previous' = ```
+			
+			        VAR _period =
+			            SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR _maxDate =
+			            CALCULATE(
+			                MAX('Date'[Date]),
+			                REMOVEFILTERS('Date')
+			            )
+			        RETURN
+			        SWITCH(
+			            _period,
+			            "PM",
+			                CALCULATE(
+			                    [Monthly Revenue Lost],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESBETWEEN(
+			                        'Date'[Date],
+			                        EOMONTH(_maxDate, -2) + 1,
+			                        EOMONTH(_maxDate, -1)
+			                    )
+			                ),
+			            "3M",
+			                CALCULATE(
+			                    [Monthly Revenue Lost],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+			                ),
+			            "6M",
+			                CALCULATE(
+			                    [Monthly Revenue Lost],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+			                ),
+			            "12M",
+			                CALCULATE(
+			                    [Monthly Revenue Lost],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+			                ),
+			            "YTD",
+			                CALCULATE(
+			                    [Monthly Revenue Lost],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+			                )
+			        )
+			```
+		lineageTag: 15e5ba8e-eed3-44cb-b6d6-5e235463e050
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly Revenue Lost Var' = ```
+			
+			        [Monthly Revenue Lost] - [Monthly Revenue Lost Previous]
+			```
+		lineageTag: b663f20c-f0fd-4f29-b705-5b79f5a38633
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly Revenue Lost % Change' = ```
+			
+			        DIVIDE(
+			            [Monthly Revenue Lost] - [Monthly Revenue Lost Previous],
+			            [Monthly Revenue Lost Previous]
+			        )
+			```
+		lineageTag: 75b64dcd-0914-4b66-85b8-f4e33a2c4341
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly Revenue Lost Change Text' = ```
+			
+			        VAR pct        = [Monthly Revenue Lost % Change]
+			        VAR diff       = [Monthly Revenue Lost Var]
+			        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR periodText =
+			            SWITCH(
+			                period,
+			                "PM",  "vs Last Month",
+			                "3M",  "vs Last 3 Months",
+			                "6M",  "vs Last 6 Months",
+			                "12M", "vs Last 12 Months",
+			                "YTD", "vs Previous YTD"
+			            )
+			        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+			        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+			        RETURN
+			        pctText & " (" & diffText & ") " & periodText
+			```
+		lineageTag: 9d1975ec-54c9-49cf-a367-bab69c006a38
+
+	measure 'Monthly Revenue Lost Color' = ```
+			
+			        SWITCH(
+			            TRUE(),
+			            [Monthly Revenue Lost % Change] > 0, "Red",
+			            [Monthly Revenue Lost % Change] < 0, "Green",
+			            "#808080"
+			        )
+			```
+		lineageTag: d206c9a7-c69b-4e7a-a1ec-64f6350e840c
+
+	measure 'Avg Monthly Charge (Churned) Previous' = ```
+			
+			        VAR _period =
+			            SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR _maxDate =
+			            CALCULATE(
+			                MAX('Date'[Date]),
+			                REMOVEFILTERS('Date')
+			            )
+			        RETURN
+			        SWITCH(
+			            _period,
+			            "PM",
+			                CALCULATE(
+			                    [Avg Monthly Charge (Churned)],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESBETWEEN(
+			                        'Date'[Date],
+			                        EOMONTH(_maxDate, -2) + 1,
+			                        EOMONTH(_maxDate, -1)
+			                    )
+			                ),
+			            "3M",
+			                CALCULATE(
+			                    [Avg Monthly Charge (Churned)],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -3),  -3,  MONTH)
+			                ),
+			            "6M",
+			                CALCULATE(
+			                    [Avg Monthly Charge (Churned)],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -6),  -6,  MONTH)
+			                ),
+			            "12M",
+			                CALCULATE(
+			                    [Avg Monthly Charge (Churned)],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    DATESINPERIOD('Date'[Date], EDATE(_maxDate, -12), -12, MONTH)
+			                ),
+			            "YTD",
+			                CALCULATE(
+			                    [Avg Monthly Charge (Churned)],
+			                    REMOVEFILTERS('Time Period Table'),
+			                    SAMEPERIODLASTYEAR(DATESYTD('Date'[Date]))
+			                )
+			        )
+			```
+		lineageTag: 11db7cc4-b212-4871-a456-ba49c21cc1a9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Monthly Charge (Churned) Var' = ```
+			
+			        [Avg Monthly Charge (Churned)] - [Avg Monthly Charge (Churned) Previous]
+			```
+		lineageTag: 79b7d446-7a5a-46b7-9aea-d642281588c9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Monthly Charge (Churned) % Change' = ```
+			
+			        DIVIDE(
+			            [Avg Monthly Charge (Churned)] - [Avg Monthly Charge (Churned) Previous],
+			            [Avg Monthly Charge (Churned) Previous]
+			        )
+			```
+		lineageTag: 5a76bad9-193d-4dc9-ae3a-0710e2735e9e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Monthly Charge (Churned) Change Text' = ```
+			
+			        VAR pct        = [Avg Monthly Charge (Churned) % Change]
+			        VAR diff       = [Avg Monthly Charge (Churned) Var]
+			        VAR period     = SELECTEDVALUE('Time Period Table'[Time Period])
+			        VAR periodText =
+			            SWITCH(
+			                period,
+			                "PM",  "vs Last Month",
+			                "3M",  "vs Last 3 Months",
+			                "6M",  "vs Last 6 Months",
+			                "12M", "vs Last 12 Months",
+			                "YTD", "vs Previous YTD"
+			            )
+			        VAR pctText  = FORMAT(pct,  "+0.0%;-0.0%")
+			        VAR diffText = FORMAT(diff, "+#,##0;-#,##0")
+			        RETURN
+			        pctText & " (" & diffText & ") " & periodText
+			```
+		lineageTag: df267d71-8082-4805-b976-f67ab24183b0
+
+	measure 'Avg Monthly Charge (Churned) Color' = ```
+			
+			        SWITCH(
+			            TRUE(),
+			            [Avg Monthly Charge (Churned) % Change] > 0, "Red",
+			            [Avg Monthly Charge (Churned) % Change] < 0, "Green",
+			            "#808080"
+			        )
+			```
+		lineageTag: d4fa5151-f1b3-420e-8beb-36e46ea4a69a
+
+	measure 'Critical Active Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical", Telco_Churn[Churn] = "No")
+			```
+		formatString: 0
+		lineageTag: 3232d4b6-c634-476d-ae5b-8330207a06c9
+
+	measure 'Critical Total Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical")
+			```
+		formatString: 0
+		lineageTag: bdef6a1b-6308-466f-8675-720736241444
+
+	measure 'Critical Risk Revenue' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "Critical",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 2a3e0fbe-cabb-45a6-b07e-d47c72f4f7b5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Charge Critical' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "Critical",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 2b478812-c871-4118-ab10-1dcdf5f2301c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Tenure Critical' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[tenure]),
+			            Telco_Churn[Risk Label] = "Critical"
+			        )
+			```
+		lineageTag: 6bc1fca2-dc82-4814-9fb4-2c7c8e368e0c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fiber % Critical' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical", Telco_Churn[InternetService] = "Fiber optic"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical"),
+			            0
+			        )
+			```
+		lineageTag: 4823367d-d03f-4d56-81fa-564884a3f3bb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ECheck % Critical' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical", Telco_Churn[PaymentMethod] = "Electronic check"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Critical"),
+			            0
+			        )
+			```
+		lineageTag: c5d5be76-4923-4dcb-a01d-1e75e739d3ac
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'High Active Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High", Telco_Churn[Churn] = "No")
+			```
+		formatString: 0
+		lineageTag: 8b8cb34e-982f-44a5-b88f-3343ec1c4480
+
+	measure 'High Total Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High")
+			```
+		formatString: 0
+		lineageTag: 3a0a72fe-f51a-4e3d-8125-8e8fb252b313
+
+	measure 'High Risk Revenue' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "High",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 3d437d2f-328e-4abe-87b8-d2b446590167
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Charge High' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "High",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 07314c32-474f-49e6-af06-93065e080e51
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Tenure High' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[tenure]),
+			            Telco_Churn[Risk Label] = "High"
+			        )
+			```
+		lineageTag: cb885ea7-106f-442a-b5af-40ef250e6105
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fiber % High' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High", Telco_Churn[InternetService] = "Fiber optic"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High"),
+			            0
+			        )
+			```
+		lineageTag: 7cc8a8c2-339c-46e1-8f53-01966a0a99d1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ECheck % High' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High", Telco_Churn[PaymentMethod] = "Electronic check"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "High"),
+			            0
+			        )
+			```
+		lineageTag: 14c572e3-6e40-4789-bee0-9c1af8210195
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Medium Active Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium", Telco_Churn[Churn] = "No")
+			```
+		formatString: 0
+		lineageTag: a0e4505e-3139-4375-b7ae-4cd99c25ab7b
+
+	measure 'Medium Total Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium")
+			```
+		formatString: 0
+		lineageTag: d57b7bdf-e075-4ce3-aa70-5f612dc4415f
+
+	measure 'Medium Risk Revenue' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "Medium",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: cdc73866-3547-45a8-a8e0-434f9244832d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Charge Medium' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "Medium",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: a505ee5e-1561-48e8-be6b-4fcbad8ce81e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Tenure Medium' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[tenure]),
+			            Telco_Churn[Risk Label] = "Medium"
+			        )
+			```
+		lineageTag: da6bf526-152e-4b0d-8aaa-a89cd1bfc376
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fiber % Medium' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium", Telco_Churn[InternetService] = "Fiber optic"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium"),
+			            0
+			        )
+			```
+		lineageTag: 12d5f6e7-1a45-4e29-b7ef-2e12c36871bc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ECheck % Medium' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium", Telco_Churn[PaymentMethod] = "Electronic check"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Medium"),
+			            0
+			        )
+			```
+		lineageTag: 022ba3ba-9f38-452f-8101-7303b69598a9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Low Active Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low", Telco_Churn[Churn] = "No")
+			```
+		formatString: 0
+		lineageTag: b828a7db-91c9-41ca-a18b-ee0fb741928c
+
+	measure 'Low Total Count' = ```
+			
+			        CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low")
+			```
+		formatString: 0
+		lineageTag: 6cc8e00a-d05e-4937-b63b-73e657636195
+
+	measure 'Low Risk Revenue' = ```
+			
+			        CALCULATE(
+			            SUM(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "Low",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: 8ad0f692-0db7-46f7-bebc-9973b1fc438b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Charge Low' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[MonthlyCharges]),
+			            Telco_Churn[Risk Label] = "Low",
+			            Telco_Churn[Churn] = "No"
+			        )
+			```
+		lineageTag: b74d0df7-91c7-4cfa-b726-df614ebb31f6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Tenure Low' = ```
+			
+			        CALCULATE(
+			            AVERAGE(Telco_Churn[tenure]),
+			            Telco_Churn[Risk Label] = "Low"
+			        )
+			```
+		lineageTag: 1253cbac-83dd-4fdb-bfb6-aa191886c11a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fiber % Low' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low", Telco_Churn[InternetService] = "Fiber optic"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low"),
+			            0
+			        )
+			```
+		lineageTag: 0e29860a-6f9a-41c5-af19-6bdacf0600d0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ECheck % Low' = ```
+			
+			        DIVIDE(
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low", Telco_Churn[PaymentMethod] = "Electronic check"),
+			            CALCULATE(COUNTROWS(Telco_Churn), Telco_Churn[Risk Label] = "Low"),
+			            0
+			        )
+			```
+		lineageTag: 3210a094-2dcd-430c-94cf-2fdfb171a838
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Top Risk Customers HTML' = ```
+			
+			 
+			// ── Footer counts ──
+			VAR critCount = FORMAT([Critical Active Count], "#,0")
+			VAR highCount = FORMAT([High Active Count],     "#,0")
+			VAR medCount  = FORMAT([Medium Active Count],   "#,0")
+			VAR lowCount  = FORMAT([Low Active Count],      "#,0")
+			 
+			// ── Top 8 Critical active customers sorted by $/mo desc ──────
+			// DAX cannot do row-level iteration in a string measure cleanly,
+			// so we pull each row explicitly using TOPN + SELECTCOLUMNS
+			 
+			VAR TopRows =
+			    TOPN(
+			        5,
+			        FILTER(
+			            Telco_Churn,
+			            Telco_Churn[Churn]       = "No" &&
+			            Telco_Churn[Risk Label]  = "Critical" &&
+			            Telco_Churn[Contract]    = "Month-to-month"
+			        ),
+			        Telco_Churn[MonthlyCharges], DESC
+			    )
+			 
+			VAR RowData =
+			    SELECTCOLUMNS(
+			        TopRows,
+			        "ID",      Telco_Churn[customerID],
+			        "Tenure",  Telco_Churn[tenure],
+			        "Net",     Telco_Churn[InternetService],
+			        "Pay",     Telco_Churn[PaymentMethod],
+			        "Mo",      Telco_Churn[MonthlyCharges],
+			        "Risk",    Telco_Churn[Risk Label]
+			    )
+			 
+			// ── Build HTML rows via CONCATENATEX ─────────────────────────
+			VAR _Rows =
+			    CONCATENATEX(
+			        RowData,
+			        "<tr>" &
+			        "<td class='cid'>" & [ID] & "</td>" &
+			        "<td>" & [Tenure] & " mo</td>" &
+			        "<td>" & IF([Net] = "Fiber optic", "Fiber", [Net]) & "</td>" &
+			        "<td>" & IF([Pay] = "Electronic check", "E-check", IF([Pay] = "Mailed check", "Mailed chk", IF([Pay] = "Bank transfer (automatic)", "Bank transfer", "Credit card"))) & "</td>" &
+			        "<td>$" & FORMAT([Mo], "0") & "</td>" &
+			        "<td><span class='badge-" & LOWER([Risk]) & "'>" & [Risk] & "</span></td>" &
+			        "</tr>",
+			        "",
+			        [Mo], DESC
+			    )
+			 
+			VAR CSS =
+			"<style>
+			*{
+			    box-sizing:border-box;
+			    margin:0;
+			    padding:0
+			}
+			
+			body{
+			    font-family:'Segoe UI',sans-serif;
+			    background:#ffffff;
+			    padding:16px;
+			    color:#111827
+			}
+			
+			.header-title{
+			    font-size:23px;
+			    font-weight:600;
+			    color:#111827;
+			    margin-bottom:10px
+			}
+			
+			
+			
+			table{
+			    width:100%;
+			    border-collapse:collapse
+			}
+			
+			thead th{
+			    font-size:15px;
+			    color:#6b7280;
+			    text-transform:uppercase;
+			    letter-spacing:.06em;
+			    padding:0 10px 8px 0;
+			    text-align:left;
+			    border-bottom:1px solid #e5e7eb
+			}
+			
+			tbody tr{
+			    border-bottom:1px solid #f1f5f9
+			}
+			
+			tbody tr:last-child{
+			    border-bottom:none
+			}
+			
+			tbody td{
+			    font-size:16px;
+			    color:#374151;
+			    padding:10px 10px 10px 0;
+			    font-family:'Segoe UI',sans-serif
+			}
+			
+			.cid{
+			    color:#111827;
+			    font-weight:600
+			}
+			
+			.badge-critical{
+			    background:rgba(255,77,109,0.10);
+			    color:#ff4d6d;
+			    font-size:13px;
+			    font-weight:600;
+			    padding:4px 10px;
+			    border-radius:99px;
+			    display:inline-block
+			}
+			
+			.badge-high{
+			    background:rgba(245,158,11,0.10);
+			    color:#f59e0b;
+			    font-size:13px;
+			    font-weight:600;
+			    padding:4px 10px;
+			    border-radius:99px;
+			    display:inline-block
+			}
+			
+			.badge-medium{
+			    background:rgba(245,158,11,0.10);
+			    color:#f59e0b;
+			    font-size:13px;
+			    font-weight:600;
+			    padding:4px 10px;
+			    border-radius:99px;
+			    display:inline-block
+			}
+			
+			.badge-low{
+			    background:rgba(45,212,160,0.10);
+			    color:#2dd4a0;
+			    font-size:13px;
+			    font-weight:600;
+			    padding:4px 10px;
+			    border-radius:99px;
+			    display:inline-block
+			}
+			
+			</style>"
+			 
+			RETURN
+			"<!DOCTYPE html>
+			<html>
+			<head>" &
+			
+			CSS &
+			
+			"</head>
+			
+			<body>
+			
+			<div class='header-title'>
+			Top high-risk customers
+			</div>
+			
+			
+			<table>
+			
+			<thead>
+			<tr>
+			<th>CUSTOMER ID</th>
+			<th>TENURE</th>
+			<th>INTERNET</th>
+			<th>PAYMENT</th>
+			<th>$/MO</th>
+			<th>RISK</th>
+			</tr>
+			</thead>
+			
+			<tbody>
+			" & _Rows & "
+			</tbody>
+			
+			</table>
+			
+			
+			
+			</body>
+			</html>"
+			```
+		lineageTag: 28676100-ba89-4c3b-be7b-66fec389c072
+
+	measure 'Risk Cards HTML' = ```
+			
+			 
+			VAR cCount   = FORMAT([Critical Total Count],  "#,0")
+			VAR cRev     = "$" & FORMAT([Critical Risk Revenue] / 1000, "0") & "K"
+			VAR cCharge  = "$" & FORMAT([Avg Charge Critical], "0.00")
+			VAR cTenure  = FORMAT([Avg Tenure Critical], "0.0") & " mo"
+			VAR cFiber   = FORMAT([Fiber % Critical], "0%")
+			VAR cEck     = FORMAT([ECheck % Critical], "0%")
+			VAR cBarW    = FORMAT(DIVIDE([Avg Tenure Critical], 72) * 100, "0") & "%"
+			 
+			VAR hCount   = FORMAT([High Total Count],  "#,0")
+			VAR hRev     = "$" & FORMAT([High Risk Revenue] / 1000, "0") & "K"
+			VAR hCharge  = "$" & FORMAT([Avg Charge High], "0.00")
+			VAR hTenure  = FORMAT([Avg Tenure High], "0.0") & " mo"
+			VAR hFiber   = FORMAT([Fiber % High], "0%")
+			VAR hEck     = FORMAT([ECheck % High], "0%")
+			VAR hBarW    = FORMAT(DIVIDE([Avg Tenure High], 72) * 100, "0") & "%"
+			 
+			VAR mCount   = FORMAT([Medium Total Count],  "#,0")
+			VAR mRev     = "$" & FORMAT([Medium Risk Revenue] / 1000, "0") & "K"
+			VAR mCharge  = "$" & FORMAT([Avg Charge Medium], "0.00")
+			VAR mTenure  = FORMAT([Avg Tenure Medium], "0.0") & " mo"
+			VAR mFiber   = FORMAT([Fiber % Medium], "0%")
+			VAR mEck     = FORMAT([ECheck % Medium], "0%")
+			VAR mBarW    = FORMAT(DIVIDE([Avg Tenure Medium], 72) * 100, "0") & "%"
+			 
+			VAR lCount   = FORMAT([Low Total Count],  "#,0")
+			VAR lRev     = "$" & FORMAT([Low Risk Revenue] / 1000, "0") & "K"
+			VAR lCharge  = "$" & FORMAT([Avg Charge Low], "0.00")
+			VAR lTenure  = FORMAT([Avg Tenure Low], "0.0") & " mo"
+			VAR lFiber   = FORMAT([Fiber % Low], "0%")
+			VAR lEck     = FORMAT([ECheck % Low], "0%")
+			VAR lBarW    = FORMAT(DIVIDE([Avg Tenure Low], 72) * 100, "0") & "%"
+			 
+			VAR CSS = "
+			<style>
+			*{box-sizing:border-box;margin:0;padding:0}
+			body{
+			    font-family:'Segoe UI',sans-serif;
+			    background:transparent;
+			    padding:14px
+			}
+			.grid{
+			    display:grid;
+			    grid-template-columns:repeat(4,1fr);
+			    gap:12px;
+			    transform:scale(1.2);
+			    transform-origin:top left;
+			    width:83.33%;
+			}
+			.card{
+			    background:#ffffff;
+			    border-radius:10px;
+			    padding:14px;
+			    border-top:3px solid var(--a);
+			    display:flex;
+			    flex-direction:column;
+			    gap:10px;
+			    border:1px solid #e5e7eb;
+			}
+			.critical{--a:#ff4d6d;--ad:rgba(255,77,109,0.15)}
+			.high{--a:#f59e0b;--ad:rgba(245,158,11,0.10)}
+			.medium{--a:#f59e0b;--ad:rgba(245,158,11,0.10)}
+			.low{--a:#2dd4a0;--ad:rgba(45,212,160,0.15)}
+			.ch{display:flex;justify-content:space-between;align-items:center}
+			.rl{font-family:'Segoe UI',sans-serif;font-size:18px;font-weight:600;color:var(--a)}
+			.cc{font-size:15px;color:#5a6070;font-family:'Segoe UI',sans-serif;}
+			.kr{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+			.kb{
+			    background:#f8fafc;
+			    border-radius:6px;
+			    padding:9px 10px;
+			    border:1px solid #e5e7eb;
+			}
+			.kv{font-family:'Segoe UI',sans-serif;font-size:22px;font-weight:600;color:var(--a);line-height:1}
+			.kl{font-size:14px;color:#5a6070;margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
+			.sv{
+			    font-family:'Segoe UI',sans-serif;
+			    font-size:20px;
+			    font-weight:600;
+			    color:#111827
+			}
+			.sl{font-size:14px;color:#5a6070;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+			.th{display:flex;justify-content:space-between;align-items:center}
+			.tl{font-size:14px;color:#5a6070;text-transform:uppercase;letter-spacing:.04em}
+			.tv{font-family:'Segoe UI',sans-serif;font-size:16px;font-weight:600;color:var(--a)}
+			.tt{
+			    height:4px;
+			    background:#e2e8f0;
+			    border-radius:99px;
+			    overflow:hidden;
+			    margin-top:5px
+			}
+			.tf{height:100%;background:var(--a);border-radius:99px}
+			.af{background:var(--ad);border-radius:6px;padding:8px 10px;font-size:14px;color:#8a90a0;line-height:1.5;border-left:2px solid var(--a)}
+			.af b{color:var(--a);font-weight:600}
+			.dv{
+			    height:1px;
+			    background:#e5e7eb
+			}
+			</style>"
+			 
+			VAR _HTML =
+			"<!DOCTYPE html><html><head><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap' rel='stylesheet'>" & CSS & "</head><body><div class='grid'>" &
+			 
+			"<div class='card critical'>" &
+			  "<div class='ch'><span class='rl'>Critical</span><span class='cc'>" & cCount & " customers</span></div>" &
+			  "<div class='kr'><div class='kb'><div class='kv'>" & cRev & "</div><div class='kl'>Monthly revenue</div></div><div class='kb'><div class='kv'>" & cCharge & "</div><div class='kl'>Avg charge</div></div></div>" &
+			  "<div class='dv'></div>" &
+			  "<div class='kr'><div class='kb'><div class='sv'>" & cFiber & "</div><div class='sl'>Fiber optic</div></div><div class='kb'><div class='sv'>" & cEck & "</div><div class='sl'>E-check</div></div></div>" &
+			  "<div><div class='th'><span class='tl'>Avg tenure</span><span class='tv'>" & cTenure & "</span></div><div class='tt'><div class='tf' style='width:" & cBarW & "'></div></div></div>" &
+			"</div>" &
+			 
+			"<div class='card high'>" &
+			  "<div class='ch'><span class='rl'>High</span><span class='cc'>" & hCount & " customers</span></div>" &
+			  "<div class='kr'><div class='kb'><div class='kv'>" & hRev & "</div><div class='kl'>Monthly revenue</div></div><div class='kb'><div class='kv'>" & hCharge & "</div><div class='kl'>Avg charge</div></div></div>" &
+			  "<div class='dv'></div>" &
+			  "<div class='kr'><div class='kb'><div class='sv'>" & hFiber & "</div><div class='sl'>Fiber optic</div></div><div class='kb'><div class='sv'>" & hEck & "</div><div class='sl'>E-check</div></div></div>" &
+			  "<div><div class='th'><span class='tl'>Avg tenure</span><span class='tv'>" & hTenure & "</span></div><div class='tt'><div class='tf' style='width:" & hBarW & "'></div></div></div>" &
+			"</div>" &
+			 
+			"<div class='card medium'>" &
+			  "<div class='ch'><span class='rl'>Medium</span><span class='cc'>" & mCount & " customers</span></div>" &
+			  "<div class='kr'><div class='kb'><div class='kv'>" & mRev & "</div><div class='kl'>Monthly revenue</div></div><div class='kb'><div class='kv'>" & mCharge & "</div><div class='kl'>Avg charge</div></div></div>" &
+			  "<div class='dv'></div>" &
+			  "<div class='kr'><div class='kb'><div class='sv'>" & mFiber & "</div><div class='sl'>Fiber optic</div></div><div class='kb'><div class='sv'>" & mEck & "</div><div class='sl'>E-check</div></div></div>" &
+			  "<div><div class='th'><span class='tl'>Avg tenure</span><span class='tv'>" & mTenure & "</span></div><div class='tt'><div class='tf' style='width:" & mBarW & "'></div></div></div>" &
+			"</div>" &
+			 
+			"<div class='card low'>" &
+			  "<div class='ch'><span class='rl'>Low</span><span class='cc'>" & lCount & " customers</span></div>" &
+			  "<div class='kr'><div class='kb'><div class='kv'>" & lRev & "</div><div class='kl'>Monthly revenue</div></div><div class='kb'><div class='kv'>" & lCharge & "</div><div class='kl'>Avg charge</div></div></div>" &
+			  "<div class='dv'></div>" &
+			  "<div class='kr'><div class='kb'><div class='sv'>" & lFiber & "</div><div class='sl'>Fiber optic</div></div><div class='kb'><div class='sv'>" & lEck & "</div><div class='sl'>E-check</div></div></div>" &
+			  "<div><div class='th'><span class='tl'>Avg tenure</span><span class='tv'>" & lTenure & "</span></div><div class='tt'><div class='tf' style='width:" & lBarW & "'></div></div></div>" &
+			"</div>" &
+			 
+			"</div></body></html>"
+			 
+			RETURN _HTML
+			 
+			```
+		lineageTag: 340537a7-ee84-4ee8-a05a-4a0b5843bf92
+
+	measure 'Customer Table HTML' = ```
+			
+			
+			VAR dq = """"
+			
+			/* ── 1. DATA ── */
+			VAR TopCustomers =
+			    TOPN(
+			        500,
+			        FILTER(Telco_Churn, Telco_Churn[Churn] = "No"),
+			        Telco_Churn[Risk Score], DESC,
+			        Telco_Churn[MonthlyCharges], DESC
+			    )
+			
+			VAR TotalCount = [Filtered Active Count]
+			
+			VAR _DataJS =
+			    CONCATENATEX(
+			        TopCustomers,
+			        "{id:'"       & SUBSTITUTE(Telco_Churn[customerID], "'", "") & "'"  &
+			        ",gender:'"   & Telco_Churn[gender]                          & "'"  &
+			        ",senior:'"   & Telco_Churn[SeniorCitizen]                   & "'"  &
+			        ",tenure:"    & FORMAT(Telco_Churn[tenure], "0")                    &
+			        ",internet:'" &
+			            SWITCH(Telco_Churn[InternetService],
+			                "Fiber optic", "Fiber",
+			                "No",          "None",
+			                Telco_Churn[InternetService]
+			            ) & "'" &
+			        ",contract:'" &
+			            SWITCH(Telco_Churn[Contract],
+			                "Month-to-month", "M-t-M",
+			                "One year",       "1 yr",
+			                "Two year",       "2 yr",
+			                Telco_Churn[Contract]
+			            ) & "'" &
+			        ",payment:'"  &
+			            SWITCH(Telco_Churn[PaymentMethod],
+			                "Electronic check",         "E-check",
+			                "Bank transfer (automatic)","Bank transfer",
+			                "Credit card (automatic)",  "Credit card",
+			                Telco_Churn[PaymentMethod]
+			            ) & "'" &
+			        ",tech:'"     & Telco_Churn[TechSupport]                     & "'"  &
+			        ",monthly:"   & FORMAT(Telco_Churn[MonthlyCharges], "0")           &
+			        ",score:"     & FORMAT(Telco_Churn[Risk Score], "0")               &
+			        ",risk:'"     & Telco_Churn[Risk Label]                      & "'"  &
+			        "}",
+			        ",",
+			        Telco_Churn[Risk Score],       DESC,
+			        Telco_Churn[MonthlyCharges],   DESC
+			    )
+			
+			/* ── 2. CSS ── */
+			VAR _CSS =
+			    "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');" &
+			    "*{box-sizing:border-box;margin:0;padding:0}" &
+			    "body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a2e;font-size:15px;padding:16px}" &
+			    ".toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}" &
+			    ".search-wrap{position:relative;flex:1;min-width:200px}" &
+			    ".search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;pointer-events:none}" &
+			    ".search-input{width:100%;padding:7px 10px 7px 30px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;color:#374151;background:#f9fafb;outline:none;transition:border-color .15s,box-shadow .15s}" &
+			    ".search-input:focus{border-color:#9C49A7;box-shadow:0 0 0 3px rgba(99,102,241,.1);background:#fff}" &
+			    ".search-input::placeholder{color:#9ca3af}" &
+			    ".filter-select{padding:7px 28px 7px 10px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;color:#374151;background:#f9fafb;-webkit-appearance:none;appearance:none;cursor:pointer;outline:none;transition:border-color .15s}" &
+			    ".filter-select:focus{border-color:#9C49A7}" &
+			    ".showing-label{margin-left:auto;font-size:13px;color:#9ca3af;white-space:nowrap}" &
+			    ".table-wrap{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}" &
+			    "table{width:100%;border-collapse:collapse}" &
+			    "thead{background:#f9fafb;border-bottom:1px solid #e5e7eb}" &
+			    "thead th{padding:9px 12px;text-align:left;font-size:13px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer;user-select:none}" &
+			    "thead th:hover{color:#374151}" &
+			    "thead th.sorted{color:#9C49A7}" &
+			    ".sort-arrow{display:inline-block;margin-left:4px;opacity:0.4;font-size:12px}" &
+			    "thead th.sorted .sort-arrow{opacity:1;color:#9C49A7}" &
+			    "tbody tr{border-bottom:1px solid #f3f4f6;transition:background .1s}" &
+			    "tbody tr:last-child{border-bottom:none}" &
+			    "tbody tr:hover{background:#f9fafb}" &
+			    "tbody td{padding:9px 12px;color:#374151;white-space:nowrap}" &
+			    ".col-id{font-weight:600;color:#111827;font-size:13px;font-family:'SF Mono','Fira Code',monospace}" &
+			    ".col-num{font-variant-numeric:tabular-nums}" &
+			    ".col-money{font-variant-numeric:tabular-nums;font-weight:500;color:#111827}" &
+			    ".score-wrap{display:flex;align-items:center;gap:6px}" &
+			    ".score-bar-track{width:40px;height:4px;background:#e5e7eb;border-radius:99px;overflow:hidden}" &
+			    ".score-bar-fill{height:100%;border-radius:99px}" &
+			    ".score-val{font-size:13px;font-weight:600;min-width:14px}" &
+			    ".badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;letter-spacing:.02em}" &
+			    ".badge-Critical{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}" &
+			    ".badge-High{background:#fffbeb;color:#d97706;border:1px solid #fed7aa}" &
+			    ".badge-Medium{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}" &
+			    ".badge-Low{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}" &
+			    ".pagination{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:12px}" &
+			    ".pg-btn{min-width:28px;height:28px;padding:0 6px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;font-size:13px;font-family:inherit;color:#374151;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}" &
+			    ".pg-btn:hover:not(:disabled){background:#f3f4f6;border-color:#d1d5db}" &
+			    ".pg-btn.active{
+			    background:#9C49A7;
+			    border-color:#9C49A7;
+			    color:#fff;
+			    font-weight:600
+			}" &
+			    ".pg-btn:disabled{opacity:.4;cursor:not-allowed}" &
+			    ".empty{text-align:center;padding:32px;color:#9ca3af;font-size:15px}" &
+			    ".note{font-size:13px;color:#9ca3af;margin-top:10px;text-align:right}"
+			
+			/* ── 3. BODY SHELL ── */
+			VAR _Body =
+			    "<div class=" & dq & "toolbar" & dq & ">" &
+			
+			        "<div class=" & dq & "search-wrap" & dq & ">" &
+			            "<span class=" & dq & "search-icon" & dq & ">⌕</span>" &
+			            "<input class=" & dq & "search-input" & dq &
+			                " type=" & dq & "text" & dq &
+			                " id=" & dq & "searchInput" & dq &
+			                " placeholder=" & dq & "Search ID, internet, payment, gender..." & dq &
+			                " oninput=" & dq & "applyFilters()" & dq & ">" &
+			        "</div>" &
+			
+			        "<select class=" & dq & "filter-select" & dq &
+			            " id=" & dq & "riskFilter" & dq &
+			            " onchange=" & dq & "applyFilters()" & dq & ">" &
+			            "<option value=" & dq & dq & ">All risk levels</option>" &
+			            "<option>Critical</option>" &
+			            "<option>High</option>" &
+			            "<option>Medium</option>" &
+			            "<option>Low</option>" &
+			        "</select>" &
+			
+			        "<select class=" & dq & "filter-select" & dq &
+			            " id=" & dq & "internetFilter" & dq &
+			            " onchange=" & dq & "applyFilters()" & dq & ">" &
+			            "<option value=" & dq & dq & ">All internet</option>" &
+			            "<option>Fiber</option>" &
+			            "<option>DSL</option>" &
+			            "<option>None</option>" &
+			        "</select>" &
+			
+			        "<select class=" & dq & "filter-select" & dq &
+			            " id=" & dq & "contractFilter" & dq &
+			            " onchange=" & dq & "applyFilters()" & dq & ">" &
+			            "<option value=" & dq & dq & ">All contracts</option>" &
+			            "<option>M-t-M</option>" &
+			            "<option>1 yr</option>" &
+			            "<option>2 yr</option>" &
+			        "</select>" &
+			
+			        "<select class=" & dq & "filter-select" & dq &
+			            " id=" & dq & "paymentFilter" & dq &
+			            " onchange=" & dq & "applyFilters()" & dq & ">" &
+			            "<option value=" & dq & dq & ">All payment types</option>" &
+			            "<option>E-check</option>" &
+			            "<option>Bank transfer</option>" &
+			            "<option>Credit card</option>" &
+			            "<option>Mailed check</option>" &
+			        "</select>" &
+			
+			        "<span class=" & dq & "showing-label" & dq & " id=" & dq & "showingLabel" & dq & ">Loading...</span>" &
+			    "</div>" &
+			
+			    "<div class=" & dq & "table-wrap" & dq & ">" &
+			        "<table>" &
+			        "<thead><tr>" &
+			            "<th onclick=" & dq & "sortBy('id')" & dq & ">CUSTOMER ID <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-id" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('gender')" & dq & ">GENDER <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-gender" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('senior')" & dq & ">SENIOR <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-senior" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('tenure')" & dq & ">TENURE <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-tenure" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('internet')" & dq & ">INTERNET <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-internet" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('contract')" & dq & ">CONTRACT <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-contract" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('payment')" & dq & ">PAYMENT <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-payment" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('tech')" & dq & ">TECH SUPPORT <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-tech" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('monthly')" & dq & ">$/MO <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-monthly" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('score')" & dq & ">SCORE <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-score" & dq & ">↕</span></th>" &
+			            "<th onclick=" & dq & "sortBy('risk')" & dq & ">RISK <span class=" & dq & "sort-arrow" & dq & " id=" & dq & "sort-risk" & dq & ">↕</span></th>" &
+			        "</tr></thead>" &
+			        "<tbody id=" & dq & "tableBody" & dq & "></tbody>" &
+			        "</table>" &
+			    "</div>" &
+			
+			    "<div class=" & dq & "pagination" & dq & " id=" & dq & "pagination" & dq & "></div>" 
+			
+			/* ── 4. JAVASCRIPT ── */
+			VAR _JS =
+			    "var ALL_DATA=[" & _DataJS & "];" &
+			    "var TOTAL_COUNT=" & FORMAT(TotalCount, "0") & ";" &
+			    "var PAGE_SIZE= 9;" &
+			    "var filtered=ALL_DATA.slice();" &
+			    "var currentPage=1;" &
+			    "var sortCol='score';" &
+			    "var sortDir=-1;" &
+			
+			    "function scoreColor(s){return s>=10?'#dc2626':s>=7?'#d97706':s>=4?'#2563eb':'#16a34a';}" &
+			
+			    "function applyFilters(){" &
+			        "var q=document.getElementById('searchInput').value.toLowerCase();" &
+			        "var risk=document.getElementById('riskFilter').value;" &
+			        "var inet=document.getElementById('internetFilter').value;" &
+			        "var contract=document.getElementById('contractFilter').value;" &
+			        "var payment=document.getElementById('paymentFilter').value;" &
+			        "filtered=ALL_DATA.filter(function(r){" &
+			            "var mq=!q||" &
+			                "r.id.toLowerCase().indexOf(q)>-1||" &
+			                "r.internet.toLowerCase().indexOf(q)>-1||" &
+			                "r.payment.toLowerCase().indexOf(q)>-1||" &
+			                "r.gender.toLowerCase().indexOf(q)>-1||" &
+			                "r.tech.toLowerCase().indexOf(q)>-1;" &
+			            "var mr=!risk||r.risk===risk;" &
+			            "var mi=!inet||r.internet===inet;" &
+			            "var mc=!contract||r.contract===contract;" &
+			            "var mp=!payment||r.payment===payment;" &
+			            "return mq&&mr&&mi&&mc&&mp;" &
+			        "});" &
+			        "currentPage=1;" &
+			        "sortAndRender();" &
+			    "}" &
+			
+			    "function sortBy(col){" &
+			        "if(sortCol===col){sortDir*=-1;}" &
+			        "else{sortCol=col;sortDir=(col==='score'||col==='monthly'||col==='tenure')?-1:1;}" &
+			        "document.querySelectorAll('thead th').forEach(function(th){th.classList.remove('sorted');});" &
+			        "document.querySelectorAll('.sort-arrow').forEach(function(a){a.textContent='↕';});" &
+			        "var th=document.getElementById('sort-'+col);" &
+			        "if(th){th.parentElement.classList.add('sorted');th.textContent=sortDir===1?'↑':'↓';}" &
+			        "currentPage=1;" &
+			        "sortAndRender();" &
+			    "}" &
+			
+			    "function sortAndRender(){" &
+			        "filtered.sort(function(a,b){" &
+			            "var av=a[sortCol], bv=b[sortCol];" &
+			            "if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}" &
+			            "return av<bv?-sortDir:av>bv?sortDir:0;" &
+			        "});" &
+			        "render();" &
+			    "}" &
+			
+			    "function render(){" &
+			        "var total=filtered.length;" &
+			        "var pages=Math.max(1,Math.ceil(total/PAGE_SIZE));" &
+			        "if(currentPage>pages)currentPage=pages;" &
+			        "var start=(currentPage-1)*PAGE_SIZE;" &
+			        "var pageData=filtered.slice(start,start+PAGE_SIZE);" &
+			        "var end=Math.min(start+PAGE_SIZE,total);" &
+			        "document.getElementById('showingLabel').textContent=" &
+			            "total===0?'No results':" &
+			            "'Showing '+(start+1)+'–'+end+' of '+total+' ('+TOTAL_COUNT+' total active)';" &
+			        "var tbody=document.getElementById('tableBody');" &
+			        "if(!pageData.length){" &
+			            "tbody.innerHTML='<tr><td colspan=" & dq & "11" & dq & " class=" & dq & "empty" & dq & ">No customers match your filters</td></tr>';" &
+			            "document.getElementById('pagination').innerHTML='';" &
+			            "return;" &
+			        "}" &
+			        "tbody.innerHTML=pageData.map(function(r){" &
+			            "var barW=Math.round((r.score/12)*100);" &
+			            "var barC=scoreColor(r.score);" &
+			            "return '<tr>'" &
+			                "+'<td class=" & dq & "col-id" & dq & ">'+r.id+'</td>'" &
+			                "+'<td>'+r.gender+'</td>'" &
+			                "+'<td>'+r.senior+'</td>'" &
+			                "+'<td class=" & dq & "col-num" & dq & ">'+r.tenure+' mo</td>'" &
+			                "+'<td>'+r.internet+'</td>'" &
+			                "+'<td>'+r.contract+'</td>'" &
+			                "+'<td>'+r.payment+'</td>'" &
+			                "+'<td>'+r.tech+'</td>'" &
+			                "+'<td class=" & dq & "col-money" & dq & ">$'+r.monthly+'</td>'" &
+			                "+'<td><div class=" & dq & "score-wrap" & dq & ">'" &
+			                    "+'<div class=" & dq & "score-bar-track" & dq & ">'" &
+			                        "+'<div class=" & dq & "score-bar-fill" & dq & " style=" & dq & "width:'+barW+'%;background:'+barC+'" & dq & "></div>'" &
+			                    "+'</div>'" &
+			                    "+'<span class=" & dq & "score-val" & dq & " style=" & dq & "color:'+barC+'" & dq & ">'+r.score+'</span>'" &
+			                "+'</div></td>'" &
+			                "+'<td><span class=" & dq & "badge badge-'+r.risk+'" & dq & ">'+r.risk+'</span></td>'" &
+			            "+'</tr>';" &
+			        "}).join('');" &
+			
+			        "var pg=document.getElementById('pagination');" &
+			        "var btns='';" &
+			        "btns+='<button class=" & dq & "pg-btn" & dq & "' +(currentPage===1?' disabled':'')+' onclick=" & dq & "goPage('+(currentPage-1)+')" & dq & ">‹</button>';" &
+			        "var range=[];" &
+			        "for(var i=1;i<=pages;i++){" &
+			            "if(i===1||i===pages||Math.abs(i-currentPage)<=1)range.push(i);" &
+			            "else if(range[range.length-1]!=='…')range.push('…');" &
+			        "}" &
+			        "range.forEach(function(p){" &
+			            "if(p==='…'){btns+='<button class=" & dq & "pg-btn" & dq & " disabled>…</button>';}" &
+			            "else{btns+='<button class=" & dq & "pg-btn'+(p===currentPage?' active':'')+'" & dq & " onclick=" & dq & "goPage('+p+')" & dq & ">'+p+'</button>';}" &
+			        "});" &
+			        "btns+='<button class=" & dq & "pg-btn" & dq & "' +(currentPage===pages?' disabled':'')+' onclick=" & dq & "goPage('+(currentPage+1)+')" & dq & ">›</button>';" &
+			        "pg.innerHTML=btns;" &
+			    "}" &
+			
+			    "function goPage(p){" &
+			        "var pages=Math.ceil(filtered.length/PAGE_SIZE);" &
+			        "if(p<1||p>pages)return;" &
+			        "currentPage=p;" &
+			        "render();" &
+			    "}" &
+			
+			    /* init: mark score column sorted, render */
+			    "document.getElementById('sort-score').parentElement.classList.add('sorted');" &
+			    "document.getElementById('sort-score').textContent='↓';" &
+			    "sortAndRender();"
+			
+			/* ── 5. ASSEMBLE ── */
+			VAR _HTML =
+			    "<!DOCTYPE html><html><head><meta charset='utf-8'>" &
+			    "<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' rel='stylesheet'>" &
+			    "<style>" & _CSS & "</style>" &
+			    "</head><body>" &
+			    _Body &
+			    "<script>" & _JS & "</script>" &
+			    "</body></html>"
+			
+			RETURN
+			    _HTML
+			```
+		lineageTag: 76c7bdb2-13e3-4591-bfcd-69b277cf95af
+
+	column Column1
+		dataType: string
+		lineageTag: 894d2752-dc55-48bc-9fe6-296e4adb409c
+		summarizeBy: none
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}})
+				in
+				    #"Changed Type"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

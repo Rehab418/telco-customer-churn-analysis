@@ -1,0 +1,112 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 1360.1809954751129,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 299.32126696832569,
+            "y": 0
+          },
+          "nodeIndex": "Telco_Churn",
+          "nodeLineageTag": "263f346d-6247-44ec-83b3-21e1f6145dd2",
+          "size": {
+            "height": 287.78280542986425,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 18.325791855203619
+          },
+          "nodeIndex": "Date",
+          "nodeLineageTag": "70fe824b-a69c-4ddf-b272-27ab44071074",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 614.83257918552044,
+            "y": 50
+          },
+          "nodeIndex": "Time Period Table",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 906.00904977375558,
+            "y": 39.968325791855214
+          },
+          "nodeIndex": "_Measures",
+          "nodeLineageTag": "e8630ce4-b831-499b-815c-e92b97d18fe1",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1317.3212669683257,
+            "y": 106.57918552036199
+          },
+          "nodeIndex": "Dim_Parameter",
+          "nodeLineageTag": "a65b14fc-e50d-4f3e-a80c-d913812bd618",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1553.52036199095,
+            "y": 0
+          },
+          "nodeIndex": "Dim_Parameter2",
+          "nodeLineageTag": "1e2d9f58-888f-4498-92b8-2da606413797",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1741.8687782805425,
+            "y": 128.97737556561086
+          },
+          "nodeIndex": "kpi",
+          "nodeLineageTag": "bf904953-0561-4a24-a7ca-cbc86c6bca0f",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 98.222222222222229,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

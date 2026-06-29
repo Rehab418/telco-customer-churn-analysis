@@ -1,0 +1,50 @@
+table Dim_Parameter
+	lineageTag: a65b14fc-e50d-4f3e-a80c-d913812bd618
+
+	column Dim_Parameter
+		lineageTag: d375157d-7baf-4f1b-9600-541c22cbef18
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Dim_Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Dim_Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dim_Parameter Fields'
+		isHidden
+		lineageTag: 451e4234-8642-4a90-b749-8546340f30b9
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Dim_Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dim_Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 6d40e6c8-23d9-42c0-b590-50ecd2a645b4
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Parameter = calculated
+		mode: import
+		source =
+				{
+				    ("Dependents", NAMEOF('Telco_Churn'[Dependents]), 0),
+				    ("gender", NAMEOF('Telco_Churn'[gender]), 1),
+				    ("Partner", NAMEOF('Telco_Churn'[Partner]), 2),
+				    ("SeniorCitizen", NAMEOF('Telco_Churn'[SeniorCitizen]), 3)
+				}
+
+	annotation PBI_Id = 3315d80838ff433a9573f4e09a8416d2
+

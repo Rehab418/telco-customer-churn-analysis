@@ -1,0 +1,157 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "e6bf61a99066f1551b1e",
+  "position": {
+    "x": 277.69297520050208,
+    "y": 555.38595040100415,
+    "z": 5000,
+    "height": 165.25287481256873,
+    "width": 284.50752673916469,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "donutChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Telco_Churn"
+                    }
+                  },
+                  "Property": "Dependents"
+                }
+              },
+              "queryRef": "Telco_Churn.Dependents",
+              "nativeQueryRef": "Dependents",
+              "active": true,
+              "displayName": "Dependents"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Telco_Churn"
+                    }
+                  },
+                  "Property": "gender"
+                }
+              },
+              "queryRef": "Telco_Churn.gender",
+              "nativeQueryRef": "gender",
+              "active": false,
+              "displayName": "gender"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Telco_Churn"
+                    }
+                  },
+                  "Property": "Partner"
+                }
+              },
+              "queryRef": "Telco_Churn.Partner",
+              "nativeQueryRef": "Partner",
+              "active": false,
+              "displayName": "Partner"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Telco_Churn"
+                    }
+                  },
+                  "Property": "SeniorCitizen"
+                }
+              },
+              "queryRef": "Telco_Churn.SeniorCitizen",
+              "nativeQueryRef": "SeniorCitizen",
+              "active": false,
+              "displayName": "SeniorCitizen"
+            }
+          ],
+          "fieldParameters": [
+            {
+              "parameterExpr": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dim_Parameter"
+                    }
+                  },
+                  "Property": "Dim_Parameter"
+                }
+              },
+              "index": 0,
+              "length": 4
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Monthly Revenue Lost"
+                }
+              },
+              "queryRef": "_Measures.Monthly Revenue Lost",
+              "nativeQueryRef": "Monthly Revenue Lost",
+              "displayName": "Monthly Revenue Lost"
+            }
+          ],
+          "fieldParameters": [
+            {
+              "parameterExpr": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "kpi"
+                    }
+                  },
+                  "Property": "kpi"
+                }
+              },
+              "index": 0,
+              "length": 1
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Monthly Revenue Lost"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

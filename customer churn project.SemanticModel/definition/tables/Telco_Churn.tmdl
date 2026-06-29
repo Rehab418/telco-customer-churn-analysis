@@ -1,0 +1,298 @@
+table Telco_Churn
+	lineageTag: 263f346d-6247-44ec-83b3-21e1f6145dd2
+
+	column customerID
+		dataType: string
+		lineageTag: 49beac20-bf6b-4601-a066-79ff40567830
+		summarizeBy: none
+		sourceColumn: customerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 969a3e25-8e1c-4d24-a7a6-9ac367a97286
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column SeniorCitizen
+		dataType: int64
+		formatString: 0
+		lineageTag: 92b99ca8-08dc-4fd4-adfb-06459d4575ff
+		summarizeBy: sum
+		sourceColumn: SeniorCitizen
+
+		annotation SummarizationSetBy = Automatic
+
+	column Partner
+		dataType: string
+		lineageTag: 996afd15-9d24-4a6e-a6bc-5c027deb04f5
+		summarizeBy: none
+		sourceColumn: Partner
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dependents
+		dataType: string
+		lineageTag: 5378d579-ca06-4d82-8309-ec6836c893d0
+		summarizeBy: none
+		sourceColumn: Dependents
+
+		annotation SummarizationSetBy = Automatic
+
+	column tenure
+		dataType: int64
+		formatString: 0
+		lineageTag: 882a3243-3252-4378-ae98-bb96bf3e7bbb
+		summarizeBy: sum
+		sourceColumn: tenure
+
+		annotation SummarizationSetBy = Automatic
+
+	column SignupDate
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 5ce2bb65-77d1-41b2-baf7-28249f41bf08
+		summarizeBy: none
+		sourceColumn: SignupDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column ChurnDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 6c781551-7a0a-46a7-8cd9-4f9e89a67117
+		summarizeBy: none
+		sourceColumn: ChurnDate
+
+		variation Variation
+			isDefault
+			relationship: 1b860a17-1cb3-442c-a5bf-d4f93d87a57f
+			defaultHierarchy: LocalDateTable_f0de5e58-3d80-4a23-a21f-019a61b8fb81.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column PhoneService
+		dataType: string
+		lineageTag: 64d2c2e9-8602-4032-8ab7-dff631eb43fb
+		summarizeBy: none
+		sourceColumn: PhoneService
+
+		annotation SummarizationSetBy = Automatic
+
+	column MultipleLines
+		dataType: string
+		lineageTag: 8130ba92-6854-4410-9592-7a13315d7a0a
+		summarizeBy: none
+		sourceColumn: MultipleLines
+
+		annotation SummarizationSetBy = Automatic
+
+	column InternetService
+		dataType: string
+		lineageTag: 884a3416-cfb7-4b33-83e6-cc21130b6b99
+		summarizeBy: none
+		sourceColumn: InternetService
+
+		annotation SummarizationSetBy = Automatic
+
+	column OnlineSecurity
+		dataType: string
+		lineageTag: c0294606-b35d-42ea-ad55-cf55eb03e953
+		summarizeBy: none
+		sourceColumn: OnlineSecurity
+
+		annotation SummarizationSetBy = Automatic
+
+	column OnlineBackup
+		dataType: string
+		lineageTag: cb373cff-05e5-4bc3-b072-ed62e040175f
+		summarizeBy: none
+		sourceColumn: OnlineBackup
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeviceProtection
+		dataType: string
+		lineageTag: a4243ab9-e69f-400f-9dc1-10bef60a4f99
+		summarizeBy: none
+		sourceColumn: DeviceProtection
+
+		annotation SummarizationSetBy = Automatic
+
+	column TechSupport
+		dataType: string
+		lineageTag: eaf004af-aa5b-48c8-9700-9923f0c6c45c
+		summarizeBy: none
+		sourceColumn: TechSupport
+
+		annotation SummarizationSetBy = Automatic
+
+	column StreamingTV
+		dataType: string
+		lineageTag: 24f8b93e-fe84-4a84-bc46-736ba8b9fc89
+		summarizeBy: none
+		sourceColumn: StreamingTV
+
+		annotation SummarizationSetBy = Automatic
+
+	column StreamingMovies
+		dataType: string
+		lineageTag: 39e7a6f9-cb12-48d0-937b-010f2a2043b0
+		summarizeBy: none
+		sourceColumn: StreamingMovies
+
+		annotation SummarizationSetBy = Automatic
+
+	column Contract
+		dataType: string
+		lineageTag: 9d805ded-3038-499d-b213-7807dc298d6c
+		summarizeBy: none
+		sourceColumn: Contract
+
+		annotation SummarizationSetBy = Automatic
+
+	column PaperlessBilling
+		dataType: string
+		lineageTag: 5a3aaf4e-bced-47c4-a1ae-5b6dc9788b27
+		summarizeBy: none
+		sourceColumn: PaperlessBilling
+
+		annotation SummarizationSetBy = Automatic
+
+	column PaymentMethod
+		dataType: string
+		lineageTag: 4c979430-c119-4b2e-8125-2aa734ee81da
+		summarizeBy: none
+		sourceColumn: PaymentMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthlyCharges
+		dataType: double
+		lineageTag: 74705b1a-adca-4bbd-9882-028b1cd0f607
+		summarizeBy: sum
+		sourceColumn: MonthlyCharges
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TotalCharges
+		dataType: double
+		lineageTag: 1cb88f41-c454-4b78-8718-b37fb433f3cb
+		summarizeBy: sum
+		sourceColumn: TotalCharges
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Churn
+		dataType: string
+		lineageTag: a4a166ef-eba5-48a4-a60b-690c2a291238
+		summarizeBy: none
+		sourceColumn: Churn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tenure Bucket' =
+			SWITCH(
+			                    true(),
+			                    Telco_Churn[tenure]<=12, "0-12 months",
+			                    Telco_Churn[tenure]<=24, "13-24 months",
+			                    Telco_Churn[tenure]<=48, "25-48 months",
+			                    "49-72 months"
+			)
+		lineageTag: f7da3832-7e5d-49d5-9dbf-572deee511e5
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tenure Bucket Sort' =
+			
+			SWITCH(
+			    TRUE(),
+			    Telco_Churn[tenure] <= 12, 1,
+			    Telco_Churn[tenure] <= 24, 2,
+			    Telco_Churn[tenure] <= 48, 3,
+			    4
+			)
+		formatString: 0
+		lineageTag: 354784e7-dfe7-4f9f-9cd3-f75c232d174a
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Risk Score' = ```
+			
+			    IF(Telco_Churn[tenure] <= 12,                              3, 0) +
+			    IF(Telco_Churn[InternetService] = "Fiber optic",           2, 0) +
+			    IF(Telco_Churn[PaymentMethod] = "Electronic check",        2, 0) +
+			    IF(Telco_Churn[Contract] = "Month-to-month",               2, 0) +
+			    IF(Telco_Churn[TechSupport] = "No",                        1, 0) +
+			    IF(Telco_Churn[SeniorCitizen] = 1,                     1, 0) +
+			    IF(Telco_Churn[Partner] = "No",                            1, 0)
+			
+			```
+		formatString: 0
+		lineageTag: af8d7632-a131-40a0-81dd-0fb5e6d1ee4c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Risk Label' =
+			
+			SWITCH(
+			    TRUE(),
+			    Telco_Churn[Risk Score] >= 8, "Critical",
+			    Telco_Churn[Risk Score] >= 6, "High",
+			    Telco_Churn[Risk Score] >= 4, "Medium",
+			    "Low"
+			)
+		lineageTag: 73b251ba-bd94-4aff-aca3-677357ff4536
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Risk Label Sort' =
+			
+			SWITCH(
+			    TRUE(),
+			    Telco_Churn[Risk Score] >= 8, 1,
+			    Telco_Churn[Risk Score] >= 6, 2,
+			    Telco_Churn[Risk Score] >= 4, 3,
+			    4
+			)
+		formatString: 0
+		lineageTag: eb88ea2a-3bfa-4922-bc90-b1ba2f8b9dfc
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Telco_Churn = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("F:\Telco_Churn.csv"),[Delimiter=",", Columns=23, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"customerID", type text}, {"gender", type text}, {"SeniorCitizen", Int64.Type}, {"Partner", type text}, {"Dependents", type text}, {"tenure", Int64.Type}, {"SignupDate", type text}, {"ChurnDate", type text}, {"PhoneService", type text}, {"MultipleLines", type text}, {"InternetService", type text}, {"OnlineSecurity", type text}, {"OnlineBackup", type text}, {"DeviceProtection", type text}, {"TechSupport", type text}, {"StreamingTV", type text}, {"StreamingMovies", type text}, {"Contract", type text}, {"PaperlessBilling", type text}, {"PaymentMethod", type text}, {"MonthlyCharges", type number}, {"TotalCharges", type number}, {"Churn", type text}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each true),
+				    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Filtered Rows", {{"ChurnDate", type date}}, "en-GB"),
+				    #"Changed Type with Locale1" = Table.TransformColumnTypes(#"Changed Type with Locale", {{"SignupDate", type date}}, "en-GB"),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Changed Type with Locale1",{{"tenure", Int64.Type}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

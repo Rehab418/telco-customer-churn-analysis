@@ -1,0 +1,51 @@
+table Dim_Parameter2
+	lineageTag: 1e2d9f58-888f-4498-92b8-2da606413797
+
+	column Dim_Parameter2
+		lineageTag: 2c818118-6171-4ad2-b4fd-d85684c1a988
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Dim_Parameter2 Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Dim_Parameter2 Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dim_Parameter2 Fields'
+		isHidden
+		lineageTag: 688f067a-71c3-4c9e-81ef-8bafdd34582f
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Dim_Parameter2 Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dim_Parameter2 Order'
+		isHidden
+		formatString: 0
+		lineageTag: a3614a44-255c-421d-b9fc-61e06a1d0da9
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Parameter2 = calculated
+		mode: import
+		source =
+				{
+				    ("InternetService", NAMEOF('Telco_Churn'[InternetService]), 0),
+				    ("Contract", NAMEOF('Telco_Churn'[Contract]), 1),
+				    ("TechSupport", NAMEOF('Telco_Churn'[TechSupport]), 2),
+				    ("PaymentMethod", NAMEOF('Telco_Churn'[PaymentMethod]), 3),
+				    ("Tenure Bucket", NAMEOF('Telco_Churn'[Tenure Bucket]), 4)
+				}
+
+	annotation PBI_Id = 190f27daae404911aea1d5553988d3ec
+

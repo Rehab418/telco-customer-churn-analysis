@@ -1,0 +1,50 @@
+table kpi
+	lineageTag: bf904953-0561-4a24-a7ca-cbc86c6bca0f
+
+	column kpi
+		lineageTag: 8dd06d15-3a8c-4b40-9a1c-09a4935b4b77
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'kpi Order'
+
+		relatedColumnDetails
+			groupByColumn: 'kpi Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'kpi Fields'
+		isHidden
+		lineageTag: 9d2c1451-5b3e-43e9-8fc4-a35ff2c95e12
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'kpi Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'kpi Order'
+		isHidden
+		formatString: 0
+		lineageTag: 78013921-6f4e-4491-926a-a2a94ca5aeeb
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition kpi = calculated
+		mode: import
+		source =
+				{
+				    ("Retention Rate", NAMEOF('_Measures'[Retention Rate]), 0),
+				    ("Churn Rate", NAMEOF('_Measures'[Churn Rate]), 1),
+				    ("Monthly Revenue Lost", NAMEOF('_Measures'[Monthly Revenue Lost]), 2),
+				    ("Revenue At Risk", NAMEOF('_Measures'[Revenue At Risk]), 3)
+				}
+
+	annotation PBI_Id = 22c3791647194699b73db2b696754c5c
+

@@ -1,0 +1,97 @@
+table 'Time Period Table'
+	lineageTag: 3a6b4ccb-bfcc-42a8-830d-8e98c268381c
+
+	column Date
+		formatString: General Date
+		lineageTag: baf27b15-4f74-4464-96b5-f51bb233ea47
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time Period'
+		lineageTag: 99b4395b-59db-4ff1-ad45-b0ad6380ba2b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Time Period]
+
+		annotation SummarizationSetBy = Automatic
+
+	column SortOrder
+		formatString: 0
+		lineageTag: 7c6bef3c-5aa3-4509-a451-298bdc4ff32f
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [SortOrder]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period
+		lineageTag: 78e934e2-65f0-47c5-8dc6-525557a2ca05
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Period]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Time Period Table' = calculated
+		mode: import
+		source =
+				
+				VAR _max_date = MAX(Telco_Churn[SignupDate])
+				VAR _year_start = DATE(YEAR(_max_date), 1, 1)
+				
+				RETURN
+				UNION(
+				
+				    ADDCOLUMNS(
+				        CALENDAR(_year_start, _max_date),
+				        "Time Period", "YTD",
+				        "SortOrder", 1,
+				        "Period", "Year To Date"
+				    ),
+				
+				    ADDCOLUMNS(
+				        CALENDAR(
+				            EOMONTH(_max_date, -2) + 1,
+				            EOMONTH(_max_date, -1)
+				        ),
+				        "Time Period", "PM",
+				        "SortOrder", 2,
+				        "Period", "Prior Month"
+				    ),
+				
+				    ADDCOLUMNS(
+				        CALENDAR(
+				            EOMONTH(_max_date, -3) + 1,
+				            _max_date
+				        ),
+				        "Time Period", "3M",
+				        "SortOrder", 3,
+				        "Period", "3 Months"
+				    ),
+				
+				    ADDCOLUMNS(
+				        CALENDAR(
+				            EOMONTH(_max_date, -6) + 1,
+				            _max_date
+				        ),
+				        "Time Period", "6M",
+				        "SortOrder", 4,
+				        "Period", "6 Months"
+				    ),
+				
+				    ADDCOLUMNS(
+				        CALENDAR(
+				            EOMONTH(_max_date, -12) + 1,
+				            _max_date
+				        ),
+				        "Time Period", "12M",
+				        "SortOrder", 5,
+				        "Period", "12 Months"
+				    )
+				)
+
+	annotation PBI_Id = 5310f709515448688e25762dedfa59e3
+

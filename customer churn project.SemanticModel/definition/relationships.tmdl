@@ -1,0 +1,20 @@
+relationship 1b860a17-1cb3-442c-a5bf-d4f93d87a57f
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Telco_Churn.ChurnDate
+	toColumn: LocalDateTable_f0de5e58-3d80-4a23-a21f-019a61b8fb81.Date
+
+relationship f207af6a-fb1f-45b0-aabd-4c6c8d5ad305
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Date.Date
+	toColumn: LocalDateTable_51496c7c-124f-4ade-87e1-fe19153f1bbb.Date
+
+relationship 7c12c1f5-10d0-f461-4f72-42f293bdaa9d
+	fromColumn: Telco_Churn.SignupDate
+	toColumn: Date.Date
+
+relationship 74a6a34f-40e3-1619-3615-8edfd47c4286
+	crossFilteringBehavior: bothDirections
+	toCardinality: many
+	fromColumn: 'Time Period Table'.Date
+	toColumn: Telco_Churn.SignupDate
+

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "160ccff714d1396c54f4",
+  "position": {
+    "x": 0,
+    "y": 18.221295564023293,
+    "z": 0,
+    "height": 327.98332015241931,
+    "width": 1278.8036523114529,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6855",
+    "query": {
+      "queryState": {
+        "content": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Top Risk Customers HTML"
+                }
+              },
+              "queryRef": "_Measures.Top Risk Customers HTML",
+              "nativeQueryRef": "Top Risk Customers HTML"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
